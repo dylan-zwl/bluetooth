@@ -52,12 +52,16 @@ public class ConnectThread extends Thread {
      */
     public void close() {
         try {
-            interrupt();
             mConnectManage.close();
             mSocket.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void cancel() {
+        interrupt();
+        close();
     }
 
     public void setReciverListener(ConnectManage.ReceiveListener receiveListener) {

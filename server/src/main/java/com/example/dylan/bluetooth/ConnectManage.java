@@ -1,56 +1,50 @@
 package com.example.dylan.bluetooth;
 
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.util.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.UUID;
 
 /**
- * Created by dylan on 2018/3/5.
+ * Created by dylan on 2018/3/7.
  */
 
-public class AcceptThread extends Thread {
-    private static String TAG = AcceptThread.class.getSimpleName();
-    private BluetoothServerSocket mServerSocket;
+public class ConnectManage {
+    private static String TAG = ConnectManage.class.getSimpleName();
     private BluetoothSocket mSocket;
     private InputStream mInputStream;
     private OutputStream mOutputStream;
 
-    public AcceptThread(BluetoothAdapter bluetoothAdapter) {
-        //创建BluetoothServerSocket对象
-        try {
-            mServerSocket = bluetoothAdapter.listenUsingInsecureRfcommWithServiceRecord("name", UUID.fromString
-                    ("5dd231bf-d217-4e85-a26c-5e5cfda9aa0c"));
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+    public ConnectManage() {
+
     }
 
-    @Override
-    public void run() {
+    public void init(BluetoothSocket socket) {
+        mSocket = socket;
+        InputStream inputStream = null;
+        OutputStream outputStream = null;
+
         try {
-            mSocket = mServerSocket.accept();
-        } catch (IOException connectException) {
-            try {
-                mSocket.close();
-            } catch (IOException closeException) {
-            }
-            return;
+            inputStream = socket.getInputStream();
+            outputStream = socket.getOutputStream();
+        } catch (IOException e) {
+            Log.e(TAG, "temp sockets not created", e);
         }
+
+        mInputStream = inputStream;
+        mOutputStream = outputStream;
+    }
+
+    public void read() {
+        Log.i(TAG, "BEGIN mConnectedThread");
+        StringBuilder recvData = new StringBuilder();
+        byte[] buffer = new byte[128];
         try {
-            Log.d(TAG, "bluetooth mSocket connect");
-            mInputStream = mSocket.getInputStream();
-            mOutputStream = mSocket.getOutputStream();
-            StringBuilder recvData = new StringBuilder();
-            byte[] buffer = new byte[128];
             while (true) {
-                int count = mInputStream.read(buffer);
+                int count = 0;
+                count = mInputStream.read(buffer);
                 if (count > 0) {
                     byte[] temp = new byte[count];
                     System.arraycopy(buffer, 0, temp, 0, count);
@@ -67,8 +61,6 @@ public class AcceptThread extends Thread {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        close();
-        Log.d(TAG, "close");
     }
 
     /**
@@ -84,9 +76,6 @@ public class AcceptThread extends Thread {
         }
     }
 
-    /**
-     * Will close the listening mSocket, and cause the thread to finish
-     */
     public void close() {
         try {
             if (mInputStream != null) {
@@ -95,17 +84,9 @@ public class AcceptThread extends Thread {
             if (mOutputStream != null) {
                 mOutputStream.close();
             }
-            if (mServerSocket != null) {
-                mServerSocket.close();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (IOException e) {
+            Log.e(TAG, "close() of connect socket failed", e);
         }
-    }
-
-    public void cancel() {
-        interrupt();
-        close();
     }
 
     private ReceiveListener mReceiveListener;
