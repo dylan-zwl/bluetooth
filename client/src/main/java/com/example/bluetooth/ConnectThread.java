@@ -15,41 +15,36 @@ public class ConnectThread extends Thread {
     private BluetoothAdapter mBluetoothAdapter;
     private final BluetoothSocket mSocket;
     private final BluetoothDevice mDevice;
+    private ConnectManage mConnectManage;
 
     public ConnectThread(BluetoothDevice device) {
-        // Use a temporary object that is later assigned to mSocket,
-        // because mSocket is final
-        BluetoothSocket tmp = null;
         mDevice = device;
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        // Get a BluetoothSocket to connect with the given BluetoothDevice
+
+        BluetoothSocket tmp = null;
         try {
-            // MY_UUID is the app's UUID string, also used by the server code
             tmp = device.createRfcommSocketToServiceRecord(UUID.fromString(MY_UUID));
         } catch (IOException e) {
         }
         mSocket = tmp;
+
+        mConnectManage = new ConnectManage();
     }
 
     public void run() {
-        // Cancel discovery because it will slow down the connection
         mBluetoothAdapter.cancelDiscovery();
-
         try {
-            // Connect the device through the socket. This will block
-            // until it succeeds or throws an exception
             mSocket.connect();
         } catch (IOException connectException) {
-            // Unable to connect; close the socket and get out
             try {
                 mSocket.close();
             } catch (IOException closeException) {
             }
             return;
         }
-
-        // Do work to manage the connection (in a separate thread)
-        manageConnectedSocket(mSocket);
+        mConnectManage.init(mSocket);
+        mConnectManage.read();
+        mConnectManage.close();
     }
 
     /**
@@ -57,8 +52,15 @@ public class ConnectThread extends Thread {
      */
     public void close() {
         try {
+            interrupt();
+            mConnectManage.close();
             mSocket.close();
         } catch (IOException e) {
+            e.printStackTrace();
         }
+    }
+
+    public void setReciverListener(ConnectManage.ReceiveListener receiveListener) {
+        mConnectManage.setReciverListener(receiveListener);
     }
 }

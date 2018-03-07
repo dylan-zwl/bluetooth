@@ -11,13 +11,17 @@ import java.io.OutputStream;
  * Created by dylan on 2018/3/7.
  */
 
-public class ConnectedThread {
-    private static String TAG = ConnectedThread.class.getSimpleName();
-    private final BluetoothSocket mSocket;
-    private final InputStream mInputStream;
-    private final OutputStream mOutputStream;
+public class ConnectManage {
+    private static String TAG = ConnectManage.class.getSimpleName();
+    private BluetoothSocket mSocket;
+    private InputStream mInputStream;
+    private OutputStream mOutputStream;
 
-    public ConnectedThread(BluetoothSocket socket) {
+    public ConnectManage() {
+
+    }
+
+    public void init(BluetoothSocket socket) {
         mSocket = socket;
         InputStream inputStream = null;
         OutputStream outputStream = null;
@@ -33,7 +37,7 @@ public class ConnectedThread {
         mOutputStream = outputStream;
     }
 
-    public void run() {
+    public void read() {
         Log.i(TAG, "BEGIN mConnectedThread");
         StringBuilder recvData = new StringBuilder();
         byte[] buffer = new byte[128];
@@ -57,7 +61,6 @@ public class ConnectedThread {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        close();
     }
 
     /**

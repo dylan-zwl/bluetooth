@@ -17,7 +17,7 @@ import java.util.UUID;
 public class AcceptThread extends Thread {
     private static String TAG = AcceptThread.class.getSimpleName();
     private BluetoothServerSocket mServerSocket;
-    private BluetoothSocket socket;
+    private BluetoothSocket mSocket;
     private InputStream is;
     private OutputStream os;
 
@@ -34,13 +34,19 @@ public class AcceptThread extends Thread {
 
     @Override
     public void run() {
-        // TODO Auto-generated method stub
-        //等待接受蓝牙客户端的请求
         try {
-            socket = mServerSocket.accept();
-            Log.d(TAG, "bluetooth socket connect");
-            is = socket.getInputStream();
-            os = socket.getOutputStream();
+            mSocket = mServerSocket.accept();
+        } catch (IOException connectException) {
+            try {
+                mSocket.close();
+            } catch (IOException closeException) {
+            }
+            return;
+        }
+        try {
+            Log.d(TAG, "bluetooth mSocket connect");
+            is = mSocket.getInputStream();
+            os = mSocket.getOutputStream();
             StringBuilder recvData = new StringBuilder();
             byte[] buffer = new byte[128];
             while (true) {
@@ -78,7 +84,7 @@ public class AcceptThread extends Thread {
     }
 
     /**
-     * Will cancel the listening socket, and cause the thread to finish
+     * Will cancel the listening mSocket, and cause the thread to finish
      */
     public void cancel() {
         interrupt();
